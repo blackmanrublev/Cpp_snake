@@ -40,6 +40,10 @@ class Cell{
         
         std::string getSpace(void){
             return space;
+        }   
+
+        void setSpace(std::string _space){
+            space = _space;
         }
         
 };
@@ -67,11 +71,20 @@ class Grid{
         void draw(){
             for (Cell cell : spaces){
                 DrawRectangleLines(cell.getWorldX(), cell.getWorldY(), cell_size, cell_size, WHITE);
+
+                DrawText(cell.getSpace().c_str(), cell.getWorldX(), cell.getWorldY(), 18, WHITE);
             }
         }
 
         int convertToCoord(int a){
             return a / size;
+        }
+
+        int convertToIndex(std::pair<int, int> coord){
+            coord.first /= size;
+            coord.second /= size;
+            int i = coord.first + coord.second * (width / size);
+            return i;
         }
         
         int getSize(void){
@@ -147,7 +160,7 @@ class Snake{
 
     public:
         Snake(int step) : step(step) {
-            Segment s(100, 100, cell_size);
+            Segment s(20, 20, cell_size);
             body.push_back(s);
             direction = {20, 0};
             speed = 0.5;
@@ -157,6 +170,7 @@ class Snake{
             timer += dt;
             if (timer > speed){
                 timer = 0.0;
+                last = body[0];
 
                 if (direction_queue.size() > 0){
                     direction = direction_queue[0];
@@ -170,7 +184,7 @@ class Snake{
                         segment.setX(segment.getX() + direction.first);
                         segment.setY(segment.getY() + direction.second);
                         
-                        std::cout << segment.getX();
+                        // std::cout << segment.getX();
                     }
                 }
             }
@@ -181,6 +195,18 @@ class Snake{
             for (Segment segment : body){
                 DrawRectangle(segment.getX(), segment.getY(), cell_size, cell_size, GREEN);
             }
+        }
+
+        auto& getBody(void){
+            return body;
+        }
+
+        float getTImer(void){
+            return timer;
+        }
+
+        Segment getLast(void){
+            return last;
         }
 };
 
@@ -213,10 +239,21 @@ void InitGame(void){
     InitWindow(win_width, win_height, "snake");
     SetTargetFPS(1000);
 
+    for (int i = 0; i < snake.getBody().size(); i++){
+        Segment& segment = snake.getBody()[i];
+        grid.getSpaces()[grid.convertToIndex({segment.getX(), segment.getY()})].setSpace("snake");
+    }
+
 }
 
 void UpdateGame(float dt){
     snake.update(dt);
+
+    if (snake.getTImer() == 0){
+        grid.getSpaces()[grid.convertToIndex({snake.getBody()[0].getX(), snake.getBody()[0].getY()})].setSpace("snake");
+        
+        grid.getSpaces()[grid.convertToIndex({snake.getLast().getX(), snake.getLast().getY()})].setSpace("");
+    }
     
 }
 
