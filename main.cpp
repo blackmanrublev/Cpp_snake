@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <deque>
 #include "raylib.h"
 
 const int win_width = 400;
@@ -102,26 +103,78 @@ class Segment{
         int getX(void){
             return x;
         }
-                
+                                 
+        void setX(int _x){
+            x = _x;
+        }
+
         int getY(void){
             return y;
+        }
+                
+        void setY(int _y){
+            y = _y;
         }
                 
         int getSize(void){
             return size;
         }
 };
-
 class Snake{
     std::vector<Segment> body;
     Segment last;
-    float update;
+    std::pair<int, int> direction;
+    std::deque<std::pair<int, int>> direction_queue;
+    float speed;
+    float timer;
+    int step;
     bool eat;
+    
+    void control(){
+        if (IsKeyPressed(KEY_UP)){
+            direction_queue.push_back({0, -step});
+        }
+        if (IsKeyPressed(KEY_DOWN)){
+            direction_queue.push_back({0, step});
+        }
+        if (IsKeyPressed(KEY_LEFT)){
+            direction_queue.push_back({-step, 0});
+        }
+        if (IsKeyPressed(KEY_RIGHT)){
+            direction_queue.push_back({step, 0});
+        }
+    }
 
     public:
-        Snake(void) {
+        Snake(int step) : step(step) {
             Segment s(100, 100, cell_size);
             body.push_back(s);
+            direction = {20, 0};
+            speed = 0.5;
+        }
+
+        void update(float dt){
+            timer += dt;
+            if (timer > speed){
+                timer = 0.0;
+
+                if (direction_queue.size() > 0){
+                    direction = direction_queue[0];
+                    direction_queue.pop_front();
+                }
+
+                for (int i = 0; i < (int)body.size(); i++){
+                    Segment& segment = body[i];
+
+                    if (i == 0){
+                        segment.setX(segment.getX() + direction.first);
+                        segment.setY(segment.getY() + direction.second);
+                        
+                        std::cout << segment.getX();
+                    }
+                }
+            }
+            control();
         }
 
         void draw(void) {
@@ -131,12 +184,12 @@ class Snake{
         }
 };
 
-Snake snake;
+Snake snake(cell_size);
 
 Grid grid(20, win_width, win_height);
 
 void InitGame(void);
-void UpdateGame(void);
+void UpdateGame(float dt);
 void DrawGame(void);
 
 int main(void) {
@@ -148,7 +201,7 @@ int main(void) {
         }
         dt = GetFrameTime();
 
-        UpdateGame();
+        UpdateGame(dt);
 
         DrawGame();
     }
@@ -162,7 +215,8 @@ void InitGame(void){
 
 }
 
-void UpdateGame(void){
+void UpdateGame(float dt){
+    snake.update(dt);
     
 }
 
