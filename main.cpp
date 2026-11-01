@@ -1,9 +1,12 @@
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <iostream>
 #include <string>
 #include <deque>
+#include <random>
 #include "raylib.h"
+
+std::mt19937 rng{std::random_device{}()};
 
 const int win_width = 400;
 const int win_height = 400;
@@ -54,11 +57,15 @@ class Grid{
     int height;
     int width_in_cells;
     int height_in_cells;
+    std::uniform_int_distribution<int> r_x;
+    std::uniform_int_distribution<int> r_y;
 
     public:
-        Grid(int size, int width, int height) : size(size), width(width), height(height) {
+        Grid(int _size, int _width, int _height) : size(_size), width(_width), height(_height) {
             width_in_cells = measureInCells(width);
             height_in_cells = measureInCells(height);
+            r_x = std::uniform_int_distribution<int>(0, (width / size) - 1);
+            r_y = std::uniform_int_distribution<int>(0, (height / size) - 1);
 
             int grid_x_count = width / size;
             int grid_y_count = height / size;
@@ -96,6 +103,22 @@ class Grid{
                 return -1;
             }else{
                 return i;
+            }
+        }
+
+        std::pair<int, int> getRandomCell(){
+            for (int i = 0; i <= 15 + static_cast<int>(std::log10(static_cast<int>(spaces.size()))); i++){
+                int x = r_x(rng) * size;
+                int y = r_y(rng) * size;
+                if (spaces[convertToIndex({x, y})].getSpace() == ""){
+                    return {x, y};
+                }
+            }
+
+            for(int i = 0; i < static_cast<int>(spaces.size()); i++){
+                if (spaces[i].getSpace() == ""){
+                    return {spaces[i].getX(), spaces[i].getY()};
+                }
             }
         }
         
@@ -153,7 +176,8 @@ class Snake{
     float speed;
     float timer;
     int step;
-    bool eat;
+    bool eaten;
+    bool overlap;
     
     void control(){
         std::pair<int, int> last_direction = direction_queue.empty() ? direction : direction_queue.back(); 
@@ -172,6 +196,7 @@ class Snake{
         }
     }
 
+
     public:
         Snake(int step) : step(step) {
             Segment s(20, 20, cell_size);
@@ -179,21 +204,23 @@ class Snake{
             body.push_back(s);
             body.push_back(d);
             direction = {20, 0};
-            speed = 0.5;
+            speed = 0.25;
         }
 
         bool update(float dt){
             timer += dt;
             if (timer > speed){
+                overlap = false;
+                eaten = false;
                 timer -= speed;
-                last = body[(int)body.size() - 1];
+                last = body[(static_cast<int>(body.size())) - 1];
 
                 if (direction_queue.size() > 0){
                     direction = direction_queue[0];
                     direction_queue.pop_front();
                 }
 
-                for (int i = (int)body.size() - 1; i >= 0; i--){
+                for (int i = static_cast<int>(body.size()) - 1; i >= 0; i--){
                     Segment& segment = body[i];
 
                     if (i == 0){
@@ -203,6 +230,10 @@ class Snake{
                         segment.setX(body[i -1].getX());
                         segment.setY(body[i -1].getY());
                     }
+                    
+                    if (segment.getX() == last.getX() && segment.getY() == last.getY()){
+                        overlap = true;
+                    }
                 }
                 control();
                 return true;
@@ -210,11 +241,24 @@ class Snake{
             control();
             return false;
         }
+        
+        void eat(){
+            body.push_back(last);
+            eaten = true;
+        }
 
-        void draw(void) {
+        void draw(void){
             for (const Segment& segment : body){
                 DrawRectangle(segment.getX(), segment.getY(), cell_size, cell_size, GREEN);
             }
+        }
+
+        bool hasEaten(){
+            return eaten;
+        }
+
+        bool isOverlapping(){
+            return overlap;
         }
 
         auto& getBody(void){
@@ -230,9 +274,46 @@ class Snake{
         }
 };
 
+
+class Apple{
+    int x;
+    int y;
+    int size;
+
+    public:
+        Apple() : x(0), y(0), size(0) {}
+        Apple(int x, int y, int size) : x(x), y(y), size(size) {} 
+        
+        void draw(void) {
+            DrawRectangle(x, y, cell_size, cell_size, RED);
+        }
+                
+        int getX(void) const{
+            return x;
+        }
+                                 
+        void setX(int _x){
+            x = _x;
+        }
+
+        int getY(void) const{
+            return y;
+        }
+                
+        void setY(int _y){
+            y = _y;
+        }
+                
+        int getSize(void) const{
+            return size;
+        }
+};
+
 Snake snake(cell_size);
 
 Grid grid(20, win_width, win_height);
+
+Apple apple(100, 20, cell_size);
 
 void InitGame(void);
 void UpdateGame(float dt);
@@ -255,7 +336,7 @@ int main(void) {
 
 void InitGame(void){
     InitWindow(win_width, win_height, "snake");
-    SetTargetFPS(1000);
+    SetTargetFPS(60);
 
     for (int i = 0; i < snake.getBody().size(); i++){
         Segment& segment = snake.getBody()[i];
@@ -264,28 +345,50 @@ void InitGame(void){
             grid.getSpaces()[grid.convertToIndex({segment.getX(), segment.getY()})].setSpace("snake");
         }
     }
+    
+    grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].setSpace("apple");
 
 }
 
 void UpdateGame(float dt){
     if (snake.update(dt)){
-        int head_index = grid.convertToIndex({snake.getBody()[0].getX(), snake.getBody()[0].getY()});
-        int last_index = grid.convertToIndex({snake.getLast().getX(), snake.getLast().getY()});
-
-        if (head_index != -1){
-            grid.getSpaces()[head_index].setSpace("snake");
+        bool eaten = false;
+        int head_grid_index = grid.convertToIndex({snake.getBody()[0].getX(), snake.getBody()[0].getY()});
+        int last_grid_index = grid.convertToIndex({snake.getLast().getX(), snake.getLast().getY()});
+        
+        if (snake.getBody()[0].getX() == apple.getX() && snake.getBody()[0].getY() == apple.getY()){
+            snake.eat();
+            if (snake.hasEaten()){
+                if (static_cast<int>(snake.getBody().size()) < static_cast<int>(grid.getSpaces().size())){
+                    auto [x, y] = grid.getRandomCell();
+                    grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].setSpace("");
+                    apple.setX(x);
+                    apple.setY(y);
+                    grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].setSpace("apple");
+                }else{
+                    apple.setX(-1000);
+                    apple.setY(-1000);
+                }
+            }
         }
-        if (last_index != -1){
-            grid.getSpaces()[last_index].setSpace("");
+
+        if (head_grid_index != -1){
+            grid.getSpaces()[head_grid_index].setSpace("snake");
+        }
+
+        if (last_grid_index != -1 && snake.hasEaten() == false && snake.isOverlapping() == false){
+            grid.getSpaces()[last_grid_index].setSpace("");
         }
     }
-    
+
 }
 
 void DrawGame(void){
     BeginDrawing();
     
     ClearBackground(BLACK);
+
+    apple.draw();
 
     snake.draw();
 
