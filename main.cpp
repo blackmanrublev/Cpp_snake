@@ -2,7 +2,6 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <deque>
 #include "raylib.h"
 
@@ -22,23 +21,23 @@ class Cell{
     public:
         Cell(int x, int y, int world_x, int world_y) : x(x), y(y), world_x(world_x), world_y(world_y) {}
 
-        int getX(void){
+        int getX(void) const{
             return x;
         }
         
-        int getY(void){
+        int getY(void) const{
             return y;
         }
         
-        int getWorldX(void){
+        int getWorldX(void) const{
             return world_x;
         }
         
-        int getWorldY(void){
+        int getWorldY(void) const{
             return world_y;
         }
         
-        std::string getSpace(void){
+        std::string getSpace(void) const{
             return space;
         }   
 
@@ -53,11 +52,16 @@ class Grid{
     int size;
     int width;
     int height;
+    int width_in_cells;
+    int height_in_cells;
 
     public:
         Grid(int size, int width, int height) : size(size), width(width), height(height) {
+            width_in_cells = measureInCells(width);
+            height_in_cells = measureInCells(height);
+
             int grid_x_count = width / size;
-            int grid_y_count = width / size;
+            int grid_y_count = height / size;
 
             for (int grid_y = 0; grid_y < grid_y_count; grid_y++){
                 for (int grid_x = 0; grid_x < grid_x_count; grid_x++){
@@ -69,33 +73,41 @@ class Grid{
         }
 
         void draw(){
-            for (Cell cell : spaces){
+            for (const Cell& cell : spaces){
                 DrawRectangleLines(cell.getWorldX(), cell.getWorldY(), cell_size, cell_size, WHITE);
 
                 DrawText(cell.getSpace().c_str(), cell.getWorldX(), cell.getWorldY(), 18, WHITE);
             }
         }
 
-        int convertToCoord(int a){
+        int measureInCells(int a){
             return a / size;
         }
 
-        int convertToIndex(std::pair<int, int> coord){
-            coord.first /= size;
-            coord.second /= size;
-            int i = coord.first + coord.second * (width / size);
-            return i;
+        int convertToIndex(const std::pair<int, int> coord){
+            int i;
+            if (measureInCells(coord.first) > width_in_cells - 1 || measureInCells(coord.second) > height_in_cells - 1 || measureInCells(coord.first) < 0 || measureInCells(coord.second) < 0){
+                return -1;
+            }else{
+                i = (coord.first / size) + (coord.second / size) * (width / size);
+            }
+
+            if ((i < 0) || i >= spaces.size()){
+                return -1;
+            }else{
+                return i;
+            }
         }
         
-        int getSize(void){
+        int getSize(void) const{
             return size;
         }
         
-        int getWidth(void){
+        int getWidth(void) const{
             return width;
         }
         
-        int getHeight(void){
+        int getHeight(void) const{
             return height;
         }
 
@@ -113,7 +125,7 @@ class Segment{
         Segment() : x(0), y(0), size(0) {}
         Segment(int x, int y, int size) : x(x), y(y), size(size) {} 
                 
-        int getX(void){
+        int getX(void) const{
             return x;
         }
                                  
@@ -121,7 +133,7 @@ class Segment{
             x = _x;
         }
 
-        int getY(void){
+        int getY(void) const{
             return y;
         }
                 
@@ -129,7 +141,7 @@ class Segment{
             y = _y;
         }
                 
-        int getSize(void){
+        int getSize(void) const{
             return size;
         }
 };
@@ -144,16 +156,18 @@ class Snake{
     bool eat;
     
     void control(){
-        if (IsKeyPressed(KEY_UP)){
+        std::pair<int, int> last_direction = direction_queue.empty() ? direction : direction_queue.back(); 
+        
+        if (IsKeyPressed(KEY_UP) && (last_direction.second != step)){
             direction_queue.push_back({0, -step});
         }
-        if (IsKeyPressed(KEY_DOWN)){
+        if (IsKeyPressed(KEY_DOWN) && (last_direction.second != -step)){
             direction_queue.push_back({0, step});
         }
-        if (IsKeyPressed(KEY_LEFT)){
+        if (IsKeyPressed(KEY_LEFT) && (last_direction.first != step)){
             direction_queue.push_back({-step, 0});
         }
-        if (IsKeyPressed(KEY_RIGHT)){
+        if (IsKeyPressed(KEY_RIGHT) && (last_direction.first != -step)){
             direction_queue.push_back({step, 0});
         }
     }
@@ -161,38 +175,44 @@ class Snake{
     public:
         Snake(int step) : step(step) {
             Segment s(20, 20, cell_size);
+            Segment d(0, 20, cell_size);
             body.push_back(s);
+            body.push_back(d);
             direction = {20, 0};
             speed = 0.5;
         }
 
-        void update(float dt){
+        bool update(float dt){
             timer += dt;
             if (timer > speed){
-                timer = 0.0;
-                last = body[0];
+                timer -= speed;
+                last = body[(int)body.size() - 1];
 
                 if (direction_queue.size() > 0){
                     direction = direction_queue[0];
                     direction_queue.pop_front();
                 }
 
-                for (int i = 0; i < (int)body.size(); i++){
+                for (int i = (int)body.size() - 1; i >= 0; i--){
                     Segment& segment = body[i];
 
                     if (i == 0){
                         segment.setX(segment.getX() + direction.first);
                         segment.setY(segment.getY() + direction.second);
-                        
-                        // std::cout << segment.getX();
+                    }else{
+                        segment.setX(body[i -1].getX());
+                        segment.setY(body[i -1].getY());
                     }
                 }
+                control();
+                return true;
             }
             control();
+            return false;
         }
 
         void draw(void) {
-            for (Segment segment : body){
+            for (const Segment& segment : body){
                 DrawRectangle(segment.getX(), segment.getY(), cell_size, cell_size, GREEN);
             }
         }
@@ -222,10 +242,8 @@ int main(void) {
     InitGame();
 
     while(!WindowShouldClose()){
-        if (FPS > 0){
-            FPS = roundf(1 / dt);
-        }
         dt = GetFrameTime();
+        FPS = roundf(1.0f / dt);
 
         UpdateGame(dt);
 
@@ -241,30 +259,37 @@ void InitGame(void){
 
     for (int i = 0; i < snake.getBody().size(); i++){
         Segment& segment = snake.getBody()[i];
-        grid.getSpaces()[grid.convertToIndex({segment.getX(), segment.getY()})].setSpace("snake");
+        int index = grid.convertToIndex({segment.getX(), segment.getY()});
+        if (index != -1){
+            grid.getSpaces()[grid.convertToIndex({segment.getX(), segment.getY()})].setSpace("snake");
+        }
     }
 
 }
 
 void UpdateGame(float dt){
-    snake.update(dt);
+    if (snake.update(dt)){
+        int head_index = grid.convertToIndex({snake.getBody()[0].getX(), snake.getBody()[0].getY()});
+        int last_index = grid.convertToIndex({snake.getLast().getX(), snake.getLast().getY()});
 
-    if (snake.getTImer() == 0){
-        grid.getSpaces()[grid.convertToIndex({snake.getBody()[0].getX(), snake.getBody()[0].getY()})].setSpace("snake");
-        
-        grid.getSpaces()[grid.convertToIndex({snake.getLast().getX(), snake.getLast().getY()})].setSpace("");
+        if (head_index != -1){
+            grid.getSpaces()[head_index].setSpace("snake");
+        }
+        if (last_index != -1){
+            grid.getSpaces()[last_index].setSpace("");
+        }
     }
     
 }
 
 void DrawGame(void){
     BeginDrawing();
+    
+    ClearBackground(BLACK);
 
     snake.draw();
 
     grid.draw();
-
-    ClearBackground(BLACK);
 
     EndDrawing();
 }
