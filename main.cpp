@@ -13,6 +13,7 @@ const int win_height = 400;
 const int cell_size = 20;
 float dt = 0;
 float FPS = 0;
+float _speed = 0.13;
 
 class Tween
 {
@@ -344,13 +345,13 @@ public:
     Snake(int step) : step(step)
     {
         direction = {20, 0};
-        speed = 0.25;
+        speed = _speed;
         body.emplace_back(20, 20, cell_size, cell_size - 5, speed);
-        body.emplace_back(0, 20, cell_size, cell_size - 5, speed);
+        // body.emplace_back(0, 20, cell_size, cell_size - 5, speed);
         last = body.back();
     }
 
-    bool update(float dt)
+    void update(float dt)
     {
         timer += dt;
         if (timer >= speed)
@@ -386,13 +387,9 @@ public:
                     overlap = true;
                 }
             }
-            control();
-            tween(dt);
-            return true;
         }
         control();
         tween(dt);
-        return false;
     }
 
     void eat()
@@ -461,7 +458,7 @@ public:
 
     Segment getLast(void)
     {
-        return body.back();
+        return last;
     }
 };
 
@@ -473,14 +470,53 @@ class Apple
     double draw_x;
     double draw_y;
     double draw_size;
+    float speed;
+    Tween x_tween;
+    Tween y_tween;
+    Tween size_tween;
 
 public:
     Apple() : x(0), y(0), size(0) {}
-    Apple(int _x, int _y, int _size, int _draw_size) : x(_x), y(_y), size(_size), draw_size(_draw_size) {}
+    Apple(int _x, int _y, int _size) : x(_x), y(_y), draw_x(_x), draw_y(_y), size(_size), draw_size(_size), x_tween(_x, _x, _speed), y_tween(_y, _y, _speed), size_tween(_size, _size, _speed) 
+    {
+        speed = _speed;
+    }
+
+    void update(float dt)
+    {              
+        if (draw_x != x && x_tween.isTweening() == false)
+        {
+            x_tween.startTween(draw_x, x);
+        }              
+        if (draw_y != y && y_tween.isTweening() == false)
+        {
+            y_tween.startTween(draw_y, y);
+        }              
+        if (draw_size != size && size_tween.isTweening() == false)
+        {
+            size_tween.startTween(draw_size, size);
+        }              
+        if (x_tween.isTweening() == true)
+        {
+            x_tween.update(dt);
+        }
+        if (y_tween.isTweening() == true)
+        {
+            y_tween.update(dt);
+        }
+        if (size_tween.isTweening() == true)
+        {
+            size_tween.update(dt);
+        }
+        draw_x = x_tween.getCurrentValue(); 
+        draw_y = y_tween.getCurrentValue(); 
+        draw_size = size_tween.getCurrentValue(); 
+
+    }
 
     void draw(void)
     {
-        DrawRectangle(x + (size / 2 - draw_size / 2), y + (size / 2 - draw_size / 2), draw_size, draw_size, RED);
+        DrawRectangle(draw_x + (cell_size / 2 - draw_size / 2), draw_y + (cell_size / 2 - draw_size / 2), draw_size, draw_size, RED);
     }
 
     double getX(void) const
@@ -503,9 +539,54 @@ public:
         y = _y;
     }
 
-    int getSize(void) const
+    double getSize(void) const
     {
         return size;
+    }
+
+    double getDrawX() const
+    {
+        return draw_x;
+    }
+
+    void setDrawX(double _draw_x)
+    {
+        draw_x = _draw_x;
+    }
+    
+    double getDrawY() const
+    {
+        return draw_y;
+    }
+
+    void setDrawY(double _draw_y)
+    {
+        draw_y = _draw_y;
+    }
+        
+    double getDrawSize() const
+    {
+        return draw_size;
+    }
+        
+    void setDrawSize(double _draw_size)
+    {
+        draw_size = _draw_size;
+    }
+
+    Tween& getXTween()
+    {
+        return x_tween;
+    }
+    
+    Tween& getYTween()
+    {
+        return y_tween;
+    }
+
+    Tween& getSizeTween()
+    {
+        return size_tween;
     }
 };
 
@@ -513,7 +594,7 @@ Snake snake(cell_size);
 
 Grid grid(20, win_width, win_height);
 
-Apple apple(100, 20, cell_size, cell_size - 10);
+Apple apple(100, 20, cell_size - 10);
 
 void InitGame(void);
 void UpdateGame(float dt);
@@ -543,7 +624,7 @@ void InitGame(void)
 
     for (int i = 0; i < snake.getBody().size(); i++)
     {
-        Segment &segment = snake.getBody()[i];
+        Segment& segment = snake.getBody()[i];
         int index = grid.convertToIndex({segment.getX(), segment.getY()});
         if (index != -1)
         {
@@ -557,6 +638,7 @@ void InitGame(void)
 void UpdateGame(float dt)
 {
     snake.update(dt);
+    apple.update(dt);
     int head_grid_index = grid.convertToIndex({snake.getBody()[0].getX(), snake.getBody()[0].getY()});
     int last_grid_index = grid.convertToIndex({snake.getLast().getX(), snake.getLast().getY()});
 
@@ -571,6 +653,11 @@ void UpdateGame(float dt)
                 grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].setSpace("");
                 apple.setX(x);
                 apple.setY(y);
+                apple.setDrawX(x);
+                apple.setDrawY(y);
+                apple.getXTween().startTween(apple.getDrawX(), apple.getX());
+                apple.getYTween().startTween(apple.getDrawY(), apple.getY());
+                apple.setDrawSize(0);
                 grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].setSpace("apple");
             }
             else
@@ -602,7 +689,7 @@ void DrawGame(void)
 
     snake.draw();
 
-    // grid.draw();
+    grid.draw();
 
     EndDrawing();
 }
