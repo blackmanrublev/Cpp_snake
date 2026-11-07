@@ -13,7 +13,6 @@ add_executable(main
     main.cpp
     Grid.cpp
     Tween.cpp
-    Cell.cpp
     Segment.cpp
     Snake.cpp
     Apple.cpp

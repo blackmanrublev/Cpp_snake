@@ -2,8 +2,30 @@
 
 
 #include <vector>
-#include "Cell.h"
 #include <random>
+#include <string>
+
+enum class Space {Empty, Snake, Apple};
+
+constexpr const char* toString(Space s)
+{
+    switch (s) 
+    {
+        case Space::Empty: return "";
+        case Space::Snake: return "Snake";
+        case Space::Apple: return "Apple";
+    }
+    return "?";
+}
+
+struct Cell
+{
+    int x;
+    int y;
+    int world_x;
+    int world_y;
+    Space space = Space::Empty;
+};
 
 class Grid
 {

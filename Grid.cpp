@@ -15,7 +15,7 @@ Grid::Grid(int _size, int _width, int _height) : size(_size), width(_width), hei
     {
         for (int grid_x = 0; grid_x < grid_x_count; grid_x++)
         {
-            Cell a(grid_x, grid_y, grid_x * size, grid_y * size);
+            Cell a{grid_x, grid_y, grid_x * size, grid_y * size};
             spaces.push_back(a);
         }
     }
@@ -25,9 +25,9 @@ void Grid::draw()
 {
     for (const Cell &cell : spaces)
     {
-        DrawRectangleLines(cell.getWorldX(), cell.getWorldY(), size, size, WHITE);
+        DrawRectangleLines(cell.world_x, cell.world_y, size, size, WHITE);
 
-        DrawText(cell.getSpace().c_str(), cell.getWorldX(), cell.getWorldY(), 18, WHITE);
+        DrawText(toString(cell.space), cell.world_x, cell.world_y, 18, WHITE);
     }
 }
 
@@ -64,7 +64,7 @@ std::pair<int, int> Grid::getRandomCell()
     {
         int x = r_x(rng) * size;
         int y = r_y(rng) * size;
-        if (spaces[convertToIndex({x, y})].getSpace() == "")
+        if (toString(spaces[convertToIndex({x, y})].space) == "")
         {
             return {x, y};
         }
@@ -72,9 +72,9 @@ std::pair<int, int> Grid::getRandomCell()
 
     for (int i = 0; i < static_cast<int>(spaces.size()); i++)
     {
-        if (spaces[i].getSpace() == "")
+        if (toString(spaces[i].space) == "")
         {
-            return {spaces[i].getWorldX(), spaces[i].getWorldY()};
+            return {spaces[i].world_x, spaces[i].world_y};
         }
     }
 }

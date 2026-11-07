@@ -55,11 +55,11 @@ void InitGame(void)
         int index = grid.convertToIndex({segment.getX(), segment.getY()});
         if (index != -1)
         {
-            grid.getSpaces()[grid.convertToIndex({segment.getX(), segment.getY()})].setSpace("snake");
+            grid.getSpaces()[grid.convertToIndex({segment.getX(), segment.getY()})].space = Space::Snake;
         }
     }
 
-    grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].setSpace("apple");
+    grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].space = Space::Apple;
 }
 
 void UpdateGame(float dt)
@@ -77,7 +77,7 @@ void UpdateGame(float dt)
             if (static_cast<int>(snake.getBody().size()) < static_cast<int>(grid.getSpaces().size()))
             {
                 auto [x, y] = grid.getRandomCell();
-                grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].setSpace("");
+                grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].space = Space::Empty;
                 apple.setX(x);
                 apple.setY(y);
                 apple.setDrawX(x);
@@ -85,7 +85,7 @@ void UpdateGame(float dt)
                 apple.getXTween().startTween(apple.getDrawX(), apple.getX());
                 apple.getYTween().startTween(apple.getDrawY(), apple.getY());
                 apple.setDrawSize(0);
-                grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].setSpace("apple");
+                grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].space = Space::Apple;
             }
             else
             {
@@ -97,12 +97,12 @@ void UpdateGame(float dt)
 
     if (head_grid_index != -1)
     {
-        grid.getSpaces()[head_grid_index].setSpace("snake");
+        grid.getSpaces()[head_grid_index].space = Space::Snake;
     }
 
     if (last_grid_index != -1 && snake.hasEaten() == false && snake.isOverlapping() == false)
     {
-        grid.getSpaces()[last_grid_index].setSpace("");
+        grid.getSpaces()[last_grid_index].space = Space::Empty;
     }
 }
 
