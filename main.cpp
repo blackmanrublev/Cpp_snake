@@ -1,15 +1,17 @@
 #include <cmath>
 #include <vector>
-#include <iostream>
-#include <string>
 #include <deque>
+#include <iostream>
 #include <random>
+#include <chrono>
+#include <string>
 #include "raylib.h"
 #include "Grid.h"
 #include "Tween.h"
 #include "Snake.h"
 #include "Apple.h"
 #include "ParticleEmitter.h"
+#include "Profiler.h"
 
 const int win_width = 400;
 const int win_height = 400;
@@ -17,6 +19,7 @@ const int cell_size = 20;
 float dt = 0;
 float FPS = 0;
 float _speed = 0.13;
+bool print_report = false;
 
 Snake snake(_speed, cell_size);
 
@@ -25,6 +28,8 @@ Grid grid(20, win_width, win_height);
 Apple apple(100, 20, cell_size - 10, cell_size, _speed);
 
 ParticleEmitter emitter(0, 0, cell_size, _speed, 5, _speed * 2);
+
+Profiler profile;
 
 void InitGame(void);
 void UpdateGame(float dt);
@@ -49,6 +54,7 @@ int main(void)
 
 void InitGame(void)
 {
+    profile.start("Init");
     InitWindow(win_width, win_height, "snake");
     SetTargetFPS(60);
 
@@ -63,10 +69,19 @@ void InitGame(void)
     }
 
     grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].space = Space::Apple;
+    profile.stop();
+    profile.report();
 }
 
 void UpdateGame(float dt)
 {
+    if (print_report)
+    {
+        profile.report();
+        print_report = false;
+    }
+    profile.reset();
+    profile.start("Update");
     snake.update(dt);
     apple.update(dt);
     emitter.update(dt);
@@ -75,6 +90,7 @@ void UpdateGame(float dt)
 
     if (snake.getBody()[0].getX() == apple.getX() && snake.getBody()[0].getY() == apple.getY())
     {
+        print_report = true;
         snake.eat();
         if (snake.hasEaten())
         {
@@ -111,10 +127,12 @@ void UpdateGame(float dt)
     {
         grid.getSpaces()[last_grid_index].space = Space::Empty;
     }
+    profile.stop();
 }
 
 void DrawGame(void)
 {
+    profile.start("Draw");
     BeginDrawing();
 
     ClearBackground(BLACK);
@@ -125,7 +143,11 @@ void DrawGame(void)
 
     emitter.draw();
 
+    DrawText(std::to_string(snake.getBody().size()).c_str(), 0, 0, 20, WHITE);
+    
+
     // grid.draw();
 
+    profile.stop();
     EndDrawing();
 }

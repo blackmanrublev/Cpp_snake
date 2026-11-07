@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(main LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(RAYLIB_PATH "C:/raylib")
@@ -17,12 +17,13 @@ add_executable(main
     Snake.cpp
     Apple.cpp
     ParticleEmitter.cpp
+    Profiler.cpp
 )
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 if(WIN32)
-    target_link_libraries(main raylib opengl32 gdi32 winmm)
+    target_link_libraries(main raylib opengl32 gdi32 winmm stdc++exp)
 else()
     target_link_libraries(main raylib)
 endif()
