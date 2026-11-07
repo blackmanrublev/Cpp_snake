@@ -16,6 +16,7 @@ add_executable(main
     Segment.cpp
     Snake.cpp
     Apple.cpp
+    ParticleEmitter.cpp
 )
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)

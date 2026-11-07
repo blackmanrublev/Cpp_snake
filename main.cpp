@@ -9,6 +9,7 @@
 #include "Tween.h"
 #include "Snake.h"
 #include "Apple.h"
+#include "ParticleEmitter.h"
 
 const int win_width = 400;
 const int win_height = 400;
@@ -22,6 +23,8 @@ Snake snake(_speed, cell_size);
 Grid grid(20, win_width, win_height);
 
 Apple apple(100, 20, cell_size - 10, cell_size, _speed);
+
+ParticleEmitter emitter(0, 0, cell_size, _speed, 5, _speed * 2);
 
 void InitGame(void);
 void UpdateGame(float dt);
@@ -66,6 +69,7 @@ void UpdateGame(float dt)
 {
     snake.update(dt);
     apple.update(dt);
+    emitter.update(dt);
     int head_grid_index = grid.convertToIndex({snake.getBody()[0].getX(), snake.getBody()[0].getY()});
     int last_grid_index = grid.convertToIndex({snake.getLast().getX(), snake.getLast().getY()});
 
@@ -76,6 +80,9 @@ void UpdateGame(float dt)
         {
             if (static_cast<int>(snake.getBody().size()) < static_cast<int>(grid.getSpaces().size()))
             {
+                emitter.setX(apple.getX());
+                emitter.setY(apple.getY());
+                emitter.emitParticles();
                 auto [x, y] = grid.getRandomCell();
                 grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].space = Space::Empty;
                 apple.setX(x);
@@ -115,6 +122,8 @@ void DrawGame(void)
     apple.draw();
 
     snake.draw();
+
+    emitter.draw();
 
     // grid.draw();
 
