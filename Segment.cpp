@@ -2,7 +2,7 @@
 
 Segment::Segment(double _x, double _y, double _size, double _draw_size, float _duration) : x(_x), y(_y), size(_size), draw_x(_x), draw_y(_y), draw_size(_draw_size), x_tween(_x, _x, _duration), y_tween(_y, _y, _duration){}
 
-double Segment::getX(void) const
+double Segment::getX() const
 {
     return x;
 }
@@ -12,7 +12,7 @@ void Segment::setX(double _x)
     x = _x;
 }
 
-double Segment::getY(void) const
+double Segment::getY() const
 {
     return y;
 }
@@ -22,7 +22,7 @@ void Segment::setY(double _y)
     y = _y;
 }
 
-double Segment::getSize(void) const
+double Segment::getSize() const
 {
     return size;
 }

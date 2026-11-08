@@ -103,7 +103,7 @@ void Snake::tween(float dt)
     }
 }
 
-void Snake::draw(void)
+void Snake::draw()
 {
     for (int i = body.size() - 1; i >= 0; i--)
     {
@@ -132,12 +132,12 @@ bool Snake::isOverlapping()
     return overlap;
 }
 
-std::vector<Segment>& Snake::getBody(void)
+std::vector<Segment>& Snake::getBody()
 {
     return body;
 }
 
-Segment Snake::getLast(void)
+Segment Snake::getLast()
 {
     return last;
 }

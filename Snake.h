@@ -27,13 +27,13 @@ public:
 
     void tween(float dt);
 
-    void draw(void);
+    void draw();
 
     bool hasEaten();
 
     bool isOverlapping();
 
-    std::vector<Segment>& getBody(void);
+    std::vector<Segment>& getBody();
 
-    Segment getLast(void);
+    Segment getLast();
 };

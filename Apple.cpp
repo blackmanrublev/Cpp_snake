@@ -37,12 +37,12 @@ void Apple::update(float dt)
 
 }
 
-void Apple::draw(void)
+void Apple::draw()
 {
     DrawRectangle(draw_x + (cell_size / 2 - draw_size / 2), draw_y + (cell_size / 2 - draw_size / 2), draw_size, draw_size, RED);
 }
 
-double Apple::getX(void) const
+double Apple::getX() const
 {
     return x;
 }
@@ -52,7 +52,7 @@ void Apple::setX(double _x)
     x = _x;
 }
 
-double Apple::getY(void) const
+double Apple::getY() const
 {
     return y;
 }
@@ -62,7 +62,7 @@ void Apple::setY(double _y)
     y = _y;
 }
 
-double Apple::getSize(void) const
+double Apple::getSize() const
 {
     return size;
 }

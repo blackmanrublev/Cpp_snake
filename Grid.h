@@ -50,11 +50,11 @@ public:
 
     std::pair<int, int> getRandomCell();
 
-    int getSize(void) const;
+    int getSize() const;
 
-    int getWidth(void) const;
+    int getWidth() const;
 
-    int getHeight(void) const;
+    int getHeight() const;
 
-    std::vector<Cell>& getSpaces(void);
+    std::vector<Cell>& getSpaces();
 };

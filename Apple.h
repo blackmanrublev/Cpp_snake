@@ -22,17 +22,17 @@ public:
 
     void update(float dt);
 
-    void draw(void);
+    void draw();
 
-    double getX(void) const;
+    double getX() const;
 
     void setX(double _x);
 
-    double getY(void) const;
+    double getY() const;
 
     void setY(double _y);
 
-    double getSize(void) const;
+    double getSize() const;
 
     double getDrawX() const;
 

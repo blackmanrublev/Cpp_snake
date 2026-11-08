@@ -79,22 +79,22 @@ std::pair<int, int> Grid::getRandomCell()
     }
 }
 
-int Grid::getSize(void) const
+int Grid::getSize() const
 {
     return size;
 }
 
-int Grid::getWidth(void) const
+int Grid::getWidth() const
 {
     return width;
 }
 
-int Grid::getHeight(void) const
+int Grid::getHeight() const
 {
     return height;
 }
 
-std::vector<Cell>& Grid::getSpaces(void)
+std::vector<Cell>& Grid::getSpaces()
 {
     return spaces;
 }

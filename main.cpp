@@ -31,11 +31,11 @@ ParticleEmitter emitter(0, 0, cell_size, _speed, 5, _speed * 2);
 
 Profiler profile;
 
-void InitGame(void);
+void InitGame();
 void UpdateGame(float dt);
-void DrawGame(void);
+void DrawGame();
 
-int main(void)
+int main()
 {
     InitGame();
 
@@ -52,7 +52,7 @@ int main(void)
     return 0;
 }
 
-void InitGame(void)
+void InitGame()
 {
     profile.start("Init");
     InitWindow(win_width, win_height, "snake");
@@ -130,7 +130,7 @@ void UpdateGame(float dt)
     profile.stop();
 }
 
-void DrawGame(void)
+void DrawGame()
 {
     profile.start("Draw");
     BeginDrawing();

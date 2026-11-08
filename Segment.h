@@ -17,15 +17,15 @@ public:
     Segment() = default;
     Segment(double _x, double _y, double _size, double _draw_size, float _duration);
 
-    double getX(void) const;
+    double getX() const;
 
     void setX(double _x);
 
-    double getY(void) const;
+    double getY() const;
 
     void setY(double _y);
 
-    double getSize(void) const;
+    double getSize() const;
 
     double getDrawX() const;
 
