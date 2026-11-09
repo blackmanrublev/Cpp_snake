@@ -1,5 +1,4 @@
 #include "Grid.h"
-#include "raylib.h"
 
 Grid::Grid(int _size, int _width, int _height) : size(_size), width(_width), height(_height)
 {
@@ -19,13 +18,26 @@ Grid::Grid(int _size, int _width, int _height) : size(_size), width(_width), hei
             spaces.push_back(a);
         }
     }
+
+}
+
+void Grid::initTexture()
+{
+    boxes = LoadRenderTexture(width, height);
+    BeginTextureMode(boxes);
+    for (const Cell &cell : spaces)
+    {
+        DrawRectangleLines(cell.world_x, cell.world_y, size, size, WHITE);
+    }
+    EndTextureMode();
 }
 
 void Grid::draw()
 {
+    DrawTexture(boxes.texture, 0, 0, WHITE);
     for (const Cell &cell : spaces)
     {
-        DrawRectangleLines(cell.world_x, cell.world_y, size, size, WHITE);
+        // DrawRectangleLines(cell.world_x, cell.world_y, size, size, WHITE);
 
         DrawText(toString(cell.space), cell.world_x, cell.world_y, 18, WHITE);
     }

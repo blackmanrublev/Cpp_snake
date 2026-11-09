@@ -1,9 +1,7 @@
 #include <cmath>
 #include <vector>
-#include <deque>
 #include <iostream>
 #include <random>
-#include <chrono>
 #include <string>
 #include "raylib.h"
 #include "Grid.h"
@@ -57,6 +55,8 @@ void InitGame()
     profile.start("Init");
     InitWindow(win_width, win_height, "snake");
     SetTargetFPS(60);
+
+    grid.initTexture();
 
     for (int i = 0; i < snake.getBody().size(); i++)
     {
@@ -145,7 +145,6 @@ void DrawGame()
 
     DrawText(std::to_string(snake.getBody().size()).c_str(), 0, 0, 20, WHITE);
     
-
     // grid.draw();
 
     profile.stop();

@@ -4,6 +4,7 @@
 #include <vector>
 #include <random>
 #include <string>
+#include "raylib.h"
 
 enum class Space {Empty, Snake, Apple};
 
@@ -38,9 +39,12 @@ class Grid
     std::mt19937 rng{std::random_device{}()};
     std::uniform_int_distribution<int> r_x;
     std::uniform_int_distribution<int> r_y;
+    RenderTexture2D boxes;
 
 public:
     Grid(int _size, int _width, int _height);
+
+    void initTexture();
 
     void draw();
 
