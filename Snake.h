@@ -3,6 +3,7 @@
 #include <vector>
 #include <deque>
 #include "Segment.h"
+#include "raylib.h"
 
 class Snake
 {
@@ -14,12 +15,13 @@ class Snake
     float timer;
     int size;
     bool eaten;
+    bool updated;
     bool overlap;
-
-    void control();
 
 public:
     Snake(float _speed, int _size);
+    
+    void control(int key);
 
     void update(float dt);
 
@@ -31,9 +33,11 @@ public:
 
     bool hasEaten();
 
+    bool hasUpdated();
+
     bool isOverlapping();
 
     std::vector<Segment>& getBody();
 
-    Segment getLast();
+    Segment& getLast();
 };

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 class Tween
 {
     double initial_value;
@@ -23,4 +25,10 @@ public:
     void cancelTween();
 
     double getCurrentValue();
+
+    void setTimer(float time);
+
+    void setFinalValue(float value);
+
+    void setInitialValue(float value);
 };

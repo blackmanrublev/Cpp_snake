@@ -4,8 +4,6 @@ Grid::Grid(int _size, int _width, int _height) : size(_size), width(_width), hei
 {
     width_in_cells = measureInCells(width);
     height_in_cells = measureInCells(height);
-    r_x = std::uniform_int_distribution<int>(0, (width / size) - 1);
-    r_y = std::uniform_int_distribution<int>(0, (height / size) - 1);
 
     int grid_x_count = width / size;
     int grid_y_count = height / size;
@@ -37,8 +35,6 @@ void Grid::draw()
     DrawTexture(boxes.texture, 0, 0, WHITE);
     for (const Cell &cell : spaces)
     {
-        // DrawRectangleLines(cell.world_x, cell.world_y, size, size, WHITE);
-
         DrawText(toString(cell.space), cell.world_x, cell.world_y, 18, WHITE);
     }
 }
@@ -74,8 +70,8 @@ std::pair<int, int> Grid::getRandomCell()
 {
     for (int i = 0; i <= 15 + static_cast<int>(std::log10(static_cast<int>(spaces.size()))); i++)
     {
-        int x = r_x(rng) * size;
-        int y = r_y(rng) * size;
+        int x = GetRandomValue(0, (width / size) - 1) * size;
+        int y = GetRandomValue(0, (height / size) - 1) * size;
         if (toString(spaces[convertToIndex({x, y})].space) == "")
         {
             return {x, y};

@@ -11,16 +11,22 @@ ParticleEmitter::ParticleEmitter(double _x, double _y, double _size, double _spe
         void ParticleEmitter::update(float dt)
         {
             if (emit == true) {
+                if (timer == 0)
+                {
+                    for (Particle& particle : particles)
+                    {
+                        particle.angle = GetRandomValue(0, 360);
+                    }
+                }
                 if (timer < lifetime)
                 {  
                     timer += dt;
-                    for (int i = 0; i < number_of_particles; i++)
+                    for (Particle& particle : particles)
                     {
-                        double angle = (i / number_of_particles) * 360;
-                        double radians = angle * (pi / 180);
+                        double radians = particle.angle * (PI / 180);
 
-                        particles[i].x += (speed * dt) * std::cos(radians);
-                        particles[i].y += (speed * dt) * std::sin(radians);
+                        particle.x += (speed * dt) * std::cos(radians);
+                        particle.y += (speed * dt) * std::sin(radians);
 
                     }
                 }

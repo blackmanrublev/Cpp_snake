@@ -1,5 +1,4 @@
 #include "Tween.h"
-#include <cmath>
 
 Tween::Tween(double _initial_value, double _final_value, float _duration) : initial_value(_initial_value), final_value(_final_value), current_value(_initial_value), duration(_duration) {}
 
@@ -19,7 +18,6 @@ void Tween::update(float dt)
     if (start == true){
         if (timer < duration)
         {
-            // current_value = initial_value + (difference * (timer / duration));
             current_value = initial_value + (difference * (pow((timer / duration) - 1, 3) + 1));
         }
         else
@@ -44,4 +42,21 @@ void Tween::cancelTween()
 double Tween::getCurrentValue()
 {
     return current_value;
+}
+
+void Tween::setTimer(float time)
+{
+    timer = time;
+}
+
+void Tween::setFinalValue(float value)
+{
+    final_value = value;
+    difference = final_value - initial_value;
+}
+
+void Tween::setInitialValue(float value)
+{
+    initial_value = value;
+    difference = final_value - initial_value;
 }

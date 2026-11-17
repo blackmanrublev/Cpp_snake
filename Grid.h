@@ -2,7 +2,7 @@
 
 
 #include <vector>
-#include <random>
+#include <cmath>
 #include <string>
 #include "raylib.h"
 
@@ -36,9 +36,6 @@ class Grid
     int height;
     int width_in_cells;
     int height_in_cells;
-    std::mt19937 rng{std::random_device{}()};
-    std::uniform_int_distribution<int> r_x;
-    std::uniform_int_distribution<int> r_y;
     RenderTexture2D boxes;
 
 public:

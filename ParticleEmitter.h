@@ -4,13 +4,12 @@
 #include <cmath>
 #include "raylib.h"
 
-const double pi = 3.14159265358979323846;
-
 struct Particle
 {
     double x;
     double y;
     double size;
+    double angle;
 };
 
 class ParticleEmitter

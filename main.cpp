@@ -1,23 +1,41 @@
-#include <cmath>
-#include <vector>
-#include <iostream>
-#include <random>
-#include <string>
+// #include <cmath>
+// #include <vector>
+// #include <iostream>
+// #include <random>
+// #include <string>
+// #include <vector>
+#include <deque>
 #include "raylib.h"
 #include "Grid.h"
 #include "Tween.h"
 #include "Snake.h"
 #include "Apple.h"
 #include "ParticleEmitter.h"
-#include "Profiler.h"
+// #include "Profiler.h"
+
+// #define PLATFORM_WEB
+
+#if defined(PLATFORM_WEB)
+    #include <emscripten.h>
+#endif
+
+struct Counter{
+    int value;
+    int set_x;
+    int set_y;
+};
 
 const int win_width = 400;
 const int win_height = 400;
 const int cell_size = 20;
 float dt = 0;
-float FPS = 0;
 float _speed = 0.13;
-bool print_report = false;
+// bool print_report = false;
+std::deque<Counter> counters{};
+std::deque<int> sett_x{};
+std::deque<int> sett_y{};
+int set_x = 0;
+int set_y = 0;
 
 Snake snake(_speed, cell_size);
 
@@ -25,36 +43,38 @@ Grid grid(20, win_width, win_height);
 
 Apple apple(100, 20, cell_size - 10, cell_size, _speed);
 
-ParticleEmitter emitter(0, 0, cell_size, _speed, 5, _speed * 2);
+ParticleEmitter emitter(0, 0, cell_size, _speed, 20, _speed * 2);
 
-Profiler profile;
+// Profiler profile;
 
 void InitGame();
 void UpdateGame(float dt);
 void DrawGame();
+void UpdateDraw();
+void CounterDraw();
 
 int main()
 {
     InitGame();
 
-    while (!WindowShouldClose())
-    {
-        dt = GetFrameTime();
-        FPS = roundf(1.0f / dt);
+    #if defined(PLATFORM_WEB)
+        emscripten_set_main_loop(UpdateDraw, 0, 1);
+    #else
 
-        UpdateGame(dt);
-
-        DrawGame();
-    }
+        while (!WindowShouldClose())
+        {
+            SetTargetFPS(60);
+            UpdateDraw();
+        }
+    #endif
 
     return 0;
 }
 
 void InitGame()
 {
-    profile.start("Init");
+    // profile.start("Init");
     InitWindow(win_width, win_height, "snake");
-    SetTargetFPS(60);
 
     grid.initTexture();
 
@@ -69,19 +89,13 @@ void InitGame()
     }
 
     grid.getSpaces()[grid.convertToIndex({apple.getX(), apple.getY()})].space = Space::Apple;
-    profile.stop();
-    profile.report();
+    // profile.stop();
+    // profile.report();
 }
 
 void UpdateGame(float dt)
 {
-    if (print_report)
-    {
-        profile.report();
-        print_report = false;
-    }
-    profile.reset();
-    profile.start("Update");
+    snake.control(GetKeyPressed());
     snake.update(dt);
     apple.update(dt);
     emitter.update(dt);
@@ -90,7 +104,7 @@ void UpdateGame(float dt)
 
     if (snake.getBody()[0].getX() == apple.getX() && snake.getBody()[0].getY() == apple.getY())
     {
-        print_report = true;
+        // print_report = true;
         snake.eat();
         if (snake.hasEaten())
         {
@@ -116,7 +130,70 @@ void UpdateGame(float dt)
                 apple.setY(-1000);
             }
         }
+    }  
+
+    if (snake.hasUpdated() == true)
+    {
+        auto& body = snake.getBody();
+        for (Counter& counter : counters)
+        {
+            if (counter.value >= 1 && counter.value < body.size())
+            {
+                if (counter.set_x != 0)
+                {
+                    body[counter.value].setDrawX(counter.set_x);
+                    body[counter.value].getXTween().setInitialValue(counter.set_x);
+                }
+                else if (counter.set_y != 0)
+                {
+                    body[counter.value].setDrawY(counter.set_y);
+                    body[counter.value].getYTween().setInitialValue(counter.set_y);
+                }
+                counter.value++;
+            }
+            else
+            {
+                counters.pop_back();
+            }
+        }
+        if (body[0].getX() < 0)
+        {
+            set_x = win_width;
+            body[0].setX(set_x - cell_size);
+            body[0].setDrawX(set_x);
+            body[0].getXTween().setFinalValue(body[0].getX());
+            body[0].getXTween().setInitialValue(body[0].getDrawX());
+            counters.push_front({1, set_x, 0});
+        }
+        else if (body[0].getX() > win_width - cell_size)
+        {
+            set_x = -cell_size;
+            body[0].setX(set_x + cell_size);
+            body[0].setDrawX(set_x);
+            body[0].getXTween().setFinalValue(body[0].getX());
+            body[0].getXTween().setInitialValue(body[0].getDrawX());
+            counters.push_front({1, set_x, 0});
+        }
+        else if (body[0].getY() < 0)
+        {
+            set_y = win_height;
+            body[0].setY(set_y - cell_size);
+            body[0].setDrawY(set_y);
+            body[0].getYTween().setFinalValue(body[0].getY());
+            body[0].getYTween().setInitialValue(body[0].getDrawY());
+            counters.push_front({1, 0, set_y});
+        }
+        else if (body[0].getY() > win_height - cell_size)
+        {
+            set_y = -cell_size;
+            body[0].setY(set_y + cell_size);
+            body[0].setDrawY(set_y);
+            body[0].getYTween().setFinalValue(body[0].getY());
+            body[0].getYTween().setInitialValue(body[0].getDrawY());
+            counters.push_front({1, 0, set_y});
+        }
     }
+    
 
     if (head_grid_index != -1)
     {
@@ -127,12 +204,12 @@ void UpdateGame(float dt)
     {
         grid.getSpaces()[last_grid_index].space = Space::Empty;
     }
-    profile.stop();
+    // profile.stop();
 }
 
 void DrawGame()
 {
-    profile.start("Draw");
+    // profile.start("Draw");
     BeginDrawing();
 
     ClearBackground(BLACK);
@@ -143,10 +220,73 @@ void DrawGame()
 
     emitter.draw();
 
-    DrawText(std::to_string(snake.getBody().size()).c_str(), 0, 0, 20, WHITE);
+    CounterDraw();
+
+    // DrawText(std::to_string(snake.getBody().size()).c_str(), 0, 0, 20, WHITE);
+
+    // DrawText(std::to_string(dt).c_str(), 100, 0, 20, WHITE);
     
     // grid.draw();
 
-    profile.stop();
+    // profile.stop();
     EndDrawing();
+}
+
+
+void UpdateDraw()
+{
+    dt = GetFrameTime();
+    UpdateGame(dt);
+    DrawGame();
+}
+
+void CounterDraw()
+{
+    int shift_x = 0;
+    int shift_y = 0;
+    auto& body = snake.getBody();
+
+    for (Counter counter : counters)
+    {
+        if (counter.set_x != 0)
+        {
+            if (counter.set_x > 0)
+            {
+                shift_x = -win_width;
+            }
+            else
+            {
+                shift_x = win_width;
+            }
+        }
+        if (counter.set_y != 0)
+        {
+            if (counter.set_y > 0)
+            {
+                shift_y = -win_height;
+            }
+            else
+            {
+                shift_y = win_height;
+            }
+        }
+        if (counter.value == 1)
+        {
+            DrawCircle(body[counter.value - 1].getDrawX() + body[counter.value - 1].getSize() / 2 + shift_x, body[counter.value - 1].getDrawY() + body[counter.value - 1].getSize() / 2 + shift_y, body[counter.value - 1].getDrawSize() / 2, GREEN);
+        }
+        else
+        {
+            if (counter.value > 0)
+            {
+                if (counter.value % 2 == 1)
+                {
+                    DrawRectangle(body[counter.value - 1].getDrawX() + (body[counter.value - 1].getSize() / 2 - body[counter.value - 1].getDrawSize() / 2) + shift_x, body[counter.value - 1].getDrawY() + (body[counter.value - 1].getSize() / 2 - body[counter.value - 1].getDrawSize() / 2) + shift_y, body[counter.value - 1].getDrawSize(), body[counter.value - 1].getDrawSize(), GREEN);
+                }
+                else
+                {
+                    DrawRectangle(body[counter.value - 1].getDrawX() + (body[counter.value - 1].getSize() / 2 - body[counter.value - 1].getDrawSize() / 2) + shift_x, body[counter.value - 1].getDrawY() + (body[counter.value - 1].getSize() / 2 - body[counter.value - 1].getDrawSize() / 2) + shift_y, body[counter.value - 1].getDrawSize(), body[counter.value - 1].getDrawSize(), DARKGREEN);
+                }
+            }
+        }
+    }
 }

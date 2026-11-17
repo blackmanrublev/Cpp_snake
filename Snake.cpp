@@ -1,28 +1,4 @@
 #include "Snake.h"
-#include "raylib.h"
-
-
-void Snake::control()
-{
-    std::pair<int, int> last_direction = direction_queue.empty() ? direction : direction_queue.back();
-
-    if (IsKeyPressed(KEY_UP) && (last_direction.second != size))
-    {
-        direction_queue.push_back({0, -size});
-    }
-    if (IsKeyPressed(KEY_DOWN) && (last_direction.second != -size))
-    {
-        direction_queue.push_back({0, size});
-    }
-    if (IsKeyPressed(KEY_LEFT) && (last_direction.first != size))
-    {
-        direction_queue.push_back({-size, 0});
-    }
-    if (IsKeyPressed(KEY_RIGHT) && (last_direction.first != -size))
-    {
-        direction_queue.push_back({size, 0});
-    }
-}
 
 Snake::Snake(float _speed, int _size) : size(_size), speed(_speed)
 {
@@ -32,11 +8,35 @@ Snake::Snake(float _speed, int _size) : size(_size), speed(_speed)
     last = body.back();
 }
 
+void Snake::control(int key)
+{
+    std::pair<int, int> last_direction = direction_queue.empty() ? direction : direction_queue.back();
+
+    if (key == KEY_UP && (last_direction.second != size))
+    {
+        direction_queue.push_back({0, -size});
+    }
+    if (key == KEY_DOWN && (last_direction.second != -size))
+    {
+        direction_queue.push_back({0, size});
+    }
+    if (key == KEY_LEFT && (last_direction.first != size))
+    {
+        direction_queue.push_back({-size, 0});
+    }
+    if (key == KEY_RIGHT && (last_direction.first != -size))
+    {
+        direction_queue.push_back({size, 0});
+    }
+}
+
 void Snake::update(float dt)
 {
     timer += dt;
+    updated = false;
     if (timer >= speed)
     {
+        updated = true;
         overlap = false;
         eaten = false;
         timer = 0;
@@ -69,7 +69,7 @@ void Snake::update(float dt)
             }
         }
     }
-    control();
+    // control();
     tween(dt);
 }
 
@@ -127,6 +127,11 @@ bool Snake::hasEaten()
     return eaten;
 }
 
+bool Snake::hasUpdated()
+{
+    return updated;
+}
+
 bool Snake::isOverlapping()
 {
     return overlap;
@@ -137,7 +142,7 @@ std::vector<Segment>& Snake::getBody()
     return body;
 }
 
-Segment Snake::getLast()
+Segment& Snake::getLast()
 {
     return last;
 }

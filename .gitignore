@@ -1,3 +1,5 @@
 game.exe
 build/
 .vscode
+/build_w
+CMakeLists.txt
