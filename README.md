@@ -6,9 +6,9 @@ A half snake game/half experimentation environment made using C++
 - `Grid.h` Creates a spatial grid with O(1) cell lookup, random empty cell search and a debug view
 - `Snake.h` User-input controlled snake
 - `Apple.h` ***apple***. You can eat it
-- `particles.h` Particle emitter implementation
-- `tween.h` Used for animation
-- `profiler.h` Used for getting total time spent 
+- `Particles.h` Particle emitter implementation
+- `Tween.h` Used for animation
+- `Profiler.h` Used for measuring execution time
 
 [Made with Raylib](https://www.raylib.com/)
 
