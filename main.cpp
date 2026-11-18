@@ -63,7 +63,6 @@ int main()
 
         while (!WindowShouldClose())
         {
-            SetTargetFPS(60);
             UpdateDraw();
         }
     #endif
@@ -75,6 +74,8 @@ void InitGame()
 {
     // profile.start("Init");
     InitWindow(win_width, win_height, "snake");
+    
+    SetTargetFPS(60);
 
     grid.initTexture();
 
